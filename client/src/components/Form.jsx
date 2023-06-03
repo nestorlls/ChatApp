@@ -21,7 +21,6 @@ export const Form = () => {
 
     if (username && password) {
       login(url, { ...userData });
-      setUser(userData);
     }
   };
 
