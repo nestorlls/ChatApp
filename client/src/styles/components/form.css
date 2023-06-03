@@ -25,3 +25,7 @@ label {
 .btn-login__register {
   @apply mt-4 flex justify-center gap-1;
 }
+
+.hover-link:hover{
+  @apply underline text-blue-400;
+}
