@@ -1,6 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
+import { useUser } from '../context/UserContext';
 
 export const Form = () => {
+  const { setUser, login } = useUser();
   const [isLoginOrRegister, setIsLoginOrRegister] = useState('register');
   const [userData, setUserData] = useState({
     username: '',
@@ -15,10 +17,11 @@ export const Form = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const { username, password } = userData;
+    const url = isLoginOrRegister === 'login' ? '/register' : '/login';
 
     if (username && password) {
-      setIsLoginOrRegister('login');
-      console.log(userData);
+      login(url, { ...userData });
+      setUser(userData);
     }
   };
 
@@ -40,9 +43,9 @@ export const Form = () => {
         />
       </label>
       <label htmlFor="password">
-        Passwrod
+        Password
         <input
-          type="text"
+          type="password"
           name="password"
           id="password"
           className="input-form"
@@ -55,23 +58,29 @@ export const Form = () => {
       <button type="submit" className="btn-submit bg-blue-600">
         {isLoginOrRegister === 'login' ? 'Register' : 'Login'}
       </button>
-      {isLoginOrRegister === 'login' ? (
-        <div className="btn-login__register">
-          <span>Already a member? </span>
-          <button
-            type="button"
-            onClick={() => setIsLoginOrRegister('register')}>
-            Login here
-          </button>
-        </div>
-      ) : (
-        <div className="btn-login__register">
-          <span>Don't have an account? </span>
-          <button type="button" onClick={() => setIsLoginOrRegister('login')}>
-            Register
-          </button>
-        </div>
-      )}
+      <div className="text-white">
+        {isLoginOrRegister === 'login' ? (
+          <div className="btn-login__register">
+            <span>Already a member? </span>
+            <button
+              type="button"
+              onClick={() => setIsLoginOrRegister('register')}
+              className="hover-link">
+              Login here
+            </button>
+          </div>
+        ) : (
+          <div className="btn-login__register">
+            <span>Don't have an account? </span>
+            <button
+              type="button"
+              onClick={() => setIsLoginOrRegister('login')}
+              className="hover-link">
+              Register
+            </button>
+          </div>
+        )}
+      </div>
     </form>
   );
 };
