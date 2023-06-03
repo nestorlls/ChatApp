@@ -3,7 +3,7 @@ label {
 }
 
 .input-form {
-  @apply block w-full rounded-lg border p-2 font-normal placeholder:text-slate-400;
+  @apply block w-full rounded-lg border p-2 font-normal placeholder:text-slate-400 text-gray-800;
 }
 
 .input-form:focus {
