@@ -1,0 +1,27 @@
+label {
+  @apply mb-2 block text-sm font-bold text-gray-700;
+}
+
+.input-form {
+  @apply block w-full rounded-lg border p-2 font-normal placeholder:text-slate-400;
+}
+
+.input-form:focus {
+  @apply border-blue-500 outline-none;
+}
+
+.btn-submit {
+  @apply w-full rounded-lg px-4 py-2 font-normal text-white;
+}
+
+.btn-submit:hover {
+  @apply bg-blue-500;
+}
+
+.btn-submit:active {
+  @apply bg-blue-600;
+}
+
+.btn-login__register {
+  @apply mt-4 flex justify-center gap-1;
+}
