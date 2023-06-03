@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const User = require('./models/User');
 
@@ -19,6 +20,7 @@ mongoose.connect(mongooseUrl);
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     credentials: true,
@@ -39,13 +41,18 @@ app.post('/register', async (req, res) => {
       username,
       password: hashedPassword,
     });
-    jwt.sign({ userId: createdUser._id }, jwtSecret, {}, (err, token) => {
-      if (err) throw err;
-      res
-        .cookie('token', token, { sameSite: 'none', secure: true })
-        .status(201)
-        .json({ id: createdUser._id });
-    });
+    jwt.sign(
+      { userId: createdUser._id, username },
+      jwtSecret,
+      {},
+      (err, token) => {
+        if (err) throw err;
+        res
+          .cookie('token', token, { sameSite: 'none', secure: true })
+          .status(201)
+          .json({ id: createdUser._id, username });
+      }
+    );
   } catch (error) {
     console.log(error);
   }
@@ -56,19 +63,42 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      jwt.sign({ userId: user._id }, jwtSecret, {}, (err, token) => {
-        if (err) throw err;
-        res
-          .cookie('token', token, { sameSite: 'none', secure: true })
-          .status(200)
-          .json({ id: user._id });
-      });
+    if (user) {
+      const passOk = await bcrypt.compare(password, user.password);
+      if (passOk) {
+        jwt.sign(
+          { userId: user._id, username },
+          jwtSecret,
+          {},
+          (err, token) => {
+            if (err) throw err;
+            res
+              .cookie('token', token, { sameSite: 'none', secure: true })
+              .status(200)
+              .json({
+                id: user._id,
+                username,
+              });
+          }
+        );
+      }
     } else {
       res.status(401).json('Wrong credentials');
     }
   } catch (error) {
     console.log(error);
+  }
+});
+
+app.get('/profile', (req, res) => {
+  const token = req.cookies?.token;
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, (err, decoded) => {
+      if (err) throw err;
+      res.json(decoded);
+    });
+  } else {
+    res.status(401).json('Unauthorized');
   }
 });
 
