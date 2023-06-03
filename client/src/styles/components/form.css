@@ -1,5 +1,5 @@
 label {
-  @apply mb-2 block text-sm font-bold text-gray-700;
+  @apply mb-2 block text-sm font-bold text-gray-100;
 }
 
 .input-form {
@@ -26,6 +26,6 @@ label {
   @apply mt-4 flex justify-center gap-1;
 }
 
-.hover-link:hover{
+.hover-link:hover {
   @apply underline text-blue-400;
 }
