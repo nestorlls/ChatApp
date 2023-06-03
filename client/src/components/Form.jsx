@@ -24,7 +24,7 @@ export const Form = () => {
 
   return (
     <form
-      className="flex flex-col w-1/2 mx-auto mb-12 gap-2"
+      className="mx-auto mb-12 flex w-1/2 flex-col gap-2"
       onSubmit={handleSubmit}>
       <label htmlFor="username">
         Username
@@ -52,7 +52,7 @@ export const Form = () => {
           onChange={handleChange}
         />
       </label>
-      <button type="submit" className="btn">
+      <button type="submit" className="btn-submit bg-blue-600">
         {isLoginOrRegister === 'login' ? 'Register' : 'Login'}
       </button>
       {isLoginOrRegister === 'login' ? (
