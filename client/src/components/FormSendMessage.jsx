@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export const FormSendMessage = () => {
+export const FormSendMessage = ({ ws, userSelected, addMessages }) => {
   const [newMessage, setNewMessage] = useState('');
 
   const handleChange = (e) => {
@@ -10,7 +10,14 @@ export const FormSendMessage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (newMessage.trim().length > 0) {
-      console.log(newMessage);
+      ws.send(
+        JSON.stringify({
+          recipient: userSelected,
+          text: newMessage,
+        })
+      );
+      setNewMessage('');
+      addMessages((prev) => [...prev, { text: newMessage }]);
     }
   };
 
@@ -20,6 +27,7 @@ export const FormSendMessage = () => {
         type="text"
         className="input-form"
         placeholder="Type your message"
+        value={newMessage}
         onChange={handleChange}
       />
       <button type="submit" className="py-2 px-3 bg-blue-500 rounded-md">
