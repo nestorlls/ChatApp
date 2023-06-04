@@ -120,7 +120,7 @@ wss.on('connection', (connection, req) => {
         jwt.verify(token, jwtSecret, {}, (err, decoded) => {
           if (err) throw err;
           connection.userId = decoded.userId;
-          connection.userName = decoded.username;
+          connection.username = decoded.username;
         });
       }
     }
@@ -131,7 +131,7 @@ wss.on('connection', (connection, req) => {
       JSON.stringify({
         online: [...wss.clients].map((client) => ({
           userId: client.userId,
-          userName: client.userName,
+          username: client.username,
         })),
       })
     );
