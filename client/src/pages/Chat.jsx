@@ -27,7 +27,6 @@ export const Chat = () => {
     ws.addEventListener('message', (event) => {
       const messageData = JSON.parse(event.data);
 
-      console.log({ event, messageData });
       if ('online' in messageData) {
         const onlinePeople = showOnlinePeople(messageData.online);
         setOnliPeople(onlinePeople);
