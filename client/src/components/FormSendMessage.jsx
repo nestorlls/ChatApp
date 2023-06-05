@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useUser } from '../context/UserContext';
 
 export const FormSendMessage = ({ ws, userSelected, addMessages }) => {
+  const { user } = useUser();
   const [newMessage, setNewMessage] = useState('');
 
   const handleChange = (e) => {
@@ -17,7 +19,15 @@ export const FormSendMessage = ({ ws, userSelected, addMessages }) => {
         })
       );
       setNewMessage('');
-      addMessages((prev) => [...prev, { text: newMessage }]);
+      addMessages((prev) => [
+        ...prev,
+        {
+          _id: Date.now(),
+          sender: user.userId,
+          recipient: userSelected,
+          text: newMessage,
+        },
+      ]);
     }
   };
 
