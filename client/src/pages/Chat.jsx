@@ -22,6 +22,7 @@ export const Chat = () => {
   const { user } = useUser();
   const [wsConecction, setWsConecction] = useState(null);
   const [onliPeople, setOnliPeople] = useState({});
+  const [offlinePeople, setOfflinePeople] = useState([]);
   const [userSelected, setUserSelected] = useState(null);
   const [messages, setMessages] = useState([]);
 
@@ -48,6 +49,14 @@ export const Chat = () => {
     }
   }, [userSelected]);
 
+  useEffect(() => {
+    axios.get('/people').then((res) => {
+      const offlinePeople = res.data.filter(
+        (person) => !onliPeople[person._id]
+      );
+      setOfflinePeople(offlinePeople);
+    });
+  }, [onliPeople]);
   const onlinePeopleExclOurUser = { ...onliPeople };
   delete onlinePeopleExclOurUser[user.userId];
 
@@ -68,12 +77,23 @@ export const Chat = () => {
               userId={userId}
               username={username}
               onClick={setUserSelected}
+              isOnline={true}
               selected={userSelected === userId}
             />
           ))}
         </div>
         <div>
           <OnOff state="offline" />
+          {offlinePeople.map(({ _id, username }) => (
+            <Contact
+              key={_id}
+              userId={_id}
+              username={username}
+              onClick={setUserSelected}
+              isOnline={false}
+              selected={userSelected === _id}
+            />
+          ))}
         </div>
       </aside>
       <section className="w-3/4 bg-slate-400 flex flex-col">
