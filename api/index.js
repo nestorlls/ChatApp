@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const ws = require('ws');
 
 const User = require('./models/User');
+const Message = require('./models/Message');
 
 dotenv.config();
 
@@ -28,6 +29,20 @@ app.use(
     origin: clientUrl,
   })
 );
+
+function getUserDataFromRequest(req) {
+  return new Promise((resolve, reject) => {
+    const token = req.cookies?.token;
+    if (token) {
+      jwt.verify(token, jwtSecret, {}, (err, userData) => {
+        if (err) reject(err);
+        resolve(userData);
+      });
+    } else {
+      reject('Unauthorized');
+    }
+  });
+}
 
 app.get('/', (req, res) => {
   res.json('Hello World!');
@@ -103,6 +118,20 @@ app.get('/profile', (req, res) => {
   }
 });
 
+app.get('/messages/:userId', async (req, res) => {
+  const userRecipientId = req.params.userId;
+  const userData = await getUserDataFromRequest(req);
+  const userSenderId = userData.userId;
+
+  const messages = await Message.find({
+    sender: { $in: [userSenderId, userRecipientId] },
+    recipient: { $in: [userSenderId, userRecipientId] },
+  })
+    .sort({ createdAt: 1 })
+    .exec();
+  res.json(messages);
+});
+
 const server = app.listen(3000, () => {
   console.log('Listening on port 3000');
 });
@@ -128,14 +157,24 @@ wss.on('connection', (connection, req) => {
   }
 
   // send message to user selected
-  connection.on('message', (message) => {
+  connection.on('message', async (message) => {
     const { recipient, text } = JSON.parse(message);
+
+    // create new message in database
+    const messageData = await Message.create({
+      sender: connection.userId,
+      recipient,
+      text,
+    });
+
+    // send message to all users
     if (recipient && text) {
       [...wss.clients]
         .filter((client) => client.userId === recipient)
         .forEach((client) => {
           client.send(
             JSON.stringify({
+              _id: messageData._id,
               sender: connection.userId,
               recipient,
               text,
