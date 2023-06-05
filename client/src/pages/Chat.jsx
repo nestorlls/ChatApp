@@ -6,6 +6,10 @@ import { Contact } from '../components/Contact';
 import { OnOff } from '../components/OnOff';
 import { useUser } from '../context/UserContext';
 
+import { uniqBy } from 'lodash';
+import { Messages } from '../components/Messages';
+import axios from 'axios';
+
 const showOnlinePeople = (onlineUsersArr) => {
   const people = {};
   onlineUsersArr.forEach(({ userId, username }) => {
@@ -30,14 +34,24 @@ export const Chat = () => {
       if ('online' in messageData) {
         const onlinePeople = showOnlinePeople(messageData.online);
         setOnliPeople(onlinePeople);
-      } else {
-        setMessages((prev) => [...prev, { text: messageData.text }]);
+      } else if ('text' in messageData) {
+        setMessages((prev) => [...prev, { ...messageData }]);
       }
     });
   }, []);
 
+  useEffect(() => {
+    if (userSelected) {
+      axios.get(`/messages/${userSelected}`).then((res) => {
+        setMessages(res.data);
+      });
+    }
+  }, [userSelected]);
+
   const onlinePeopleExclOurUser = { ...onliPeople };
   delete onlinePeopleExclOurUser[user.userId];
+
+  const messagesWithoutDupes = uniqBy(messages, '_id');
 
   return (
     <div className="flex h-screen">
@@ -62,7 +76,7 @@ export const Chat = () => {
           <OnOff state="offline" />
         </div>
       </aside>
-      <section className="w-3/4 bg-slate-400 flex flex-col p-2">
+      <section className="w-3/4 bg-slate-400 flex flex-col">
         <div className="flex-grow">
           {!userSelected && (
             <>
@@ -75,9 +89,13 @@ export const Chat = () => {
           )}
           {userSelected && (
             <>
-              {messages.map((message, i) => (
-                <p key={i}>{message.text}</p>
-              ))}
+              <div className="relative h-full">
+                <div className="overflow-y-scroll absolute top-0 right-0 left-0 bottom-2 flex flex-col gap-2 px-4">
+                  {messagesWithoutDupes.map((message) => (
+                    <Messages key={message._id} {...message} />
+                  ))}
+                </div>
+              </div>
             </>
           )}
         </div>
