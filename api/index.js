@@ -106,6 +106,10 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.post('/logout', async (_req, res) => {
+  res.clearCookie('token').json('Logged out');
+});
+
 app.get('/profile', (req, res) => {
   const token = req.cookies?.token;
   if (token) {
