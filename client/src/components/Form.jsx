@@ -26,7 +26,7 @@ export const Form = () => {
 
   return (
     <form
-      className="mx-auto mb-12 flex w-1/2 flex-col gap-2"
+      className="mx-auto mb-12 flex w-96 flex-col gap-2"
       onSubmit={handleSubmit}>
       <label htmlFor="username">
         Username
