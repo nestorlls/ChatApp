@@ -23,7 +23,7 @@ export const FormSendMessage = ({ ws, userSelected, addMessages }) => {
         ...prev,
         {
           _id: Date.now(),
-          sender: user.userId,
+          sender: user._id,
           recipient: userSelected,
           text: newMessage,
         },
