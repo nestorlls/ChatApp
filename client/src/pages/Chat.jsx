@@ -13,8 +13,8 @@ import { LogoutB } from '../components/LogoutB';
 
 const showOnlinePeople = (onlineUsersArr) => {
   const people = {};
-  onlineUsersArr.forEach(({ userId, username }) => {
-    people[userId] = username;
+  onlineUsersArr.forEach(({ _id, username }) => {
+    people[_id] = username;
   });
   return people;
 };
@@ -22,7 +22,7 @@ const showOnlinePeople = (onlineUsersArr) => {
 export const Chat = () => {
   const { user } = useUser();
   const [wsConecction, setWsConecction] = useState(null);
-  const [onliPeople, setOnliPeople] = useState({});
+  const [onlinePeople, setOnliPeople] = useState({});
   const [offlinePeople, setOfflinePeople] = useState([]);
   const [userSelected, setUserSelected] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -35,6 +35,7 @@ export const Chat = () => {
 
       if ('online' in messageData) {
         const onlinePeople = showOnlinePeople(messageData.online);
+
         setOnliPeople(onlinePeople);
       } else if ('text' in messageData) {
         setMessages((prev) => [...prev, { ...messageData }]);
@@ -52,27 +53,31 @@ export const Chat = () => {
 
   useEffect(() => {
     axios.get('/people').then((res) => {
-      const offlinePeople = res.data.filter(
-        (person) => !onliPeople[person._id]
-      );
-      setOfflinePeople(offlinePeople);
+      const offlinePeopleArr = res.data
+        .filter(({ _id }) => !onlinePeople[_id])
+        .filter(({ _id }) => _id !== user._id);
+      setOfflinePeople(offlinePeopleArr);
     });
-  }, [onliPeople]);
-  const onlinePeopleExclOurUser = { ...onliPeople };
-  delete onlinePeopleExclOurUser[user.userId];
+  }, [onlinePeople]);
+
+  const onlinePeopleExclOurUser = { ...onlinePeople };
+  delete onlinePeopleExclOurUser[user._id];
 
   const messagesWithoutDupes = uniqBy(messages, '_id');
 
   return (
     <div className="flex h-screen">
-      <aside className="w-1/4 bg-slate-700 flex flex-col justify-evenly">
+      <aside className="w-80 bg-slate-700 flex flex-col justify-evenly">
         <div className="flex-grow">
           <div className="flex">
             <Logo />
             <User />
           </div>
           <div>
-            <OnOff state="online" />
+            <OnOff
+              state="online"
+              countPeople={Object.entries(onlinePeopleExclOurUser).length}
+            />
             {Object.entries(onlinePeopleExclOurUser).map(
               ([userId, username]) => (
                 <Contact
@@ -87,7 +92,7 @@ export const Chat = () => {
             )}
           </div>
           <div>
-            <OnOff state="offline" />
+            <OnOff state="offline" countPeople={offlinePeople.length} />
             {offlinePeople.map(({ _id, username }) => (
               <Contact
                 key={_id}
@@ -125,7 +130,7 @@ export const Chat = () => {
           <LogoutB setWs={wsConecction} />
         </div>
       </aside>
-      <section className="w-3/4 bg-slate-400 flex flex-col">
+      <section className="w-full bg-slate-400 flex flex-col">
         <div className="flex-grow">
           {!userSelected && (
             <>
