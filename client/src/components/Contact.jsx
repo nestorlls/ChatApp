@@ -9,7 +9,7 @@ export const Contact = ({ userId, username, onClick, selected, isOnline }) => {
       }`}
       onClick={() => onClick(userId)}>
       {selected && <div className="w-1 h-12 bg-white rounded-r-lg" />}
-      <div className="flex gap-2 py-3 pl-8 items-center">
+      <div className="flex gap-2 py-3 pl-12 items-center">
         <Avatar userId={userId} username={username} online={isOnline} />
         <span className={`${selected ? 'text-gray-800' : 'text-white'}`}>
           {username}
