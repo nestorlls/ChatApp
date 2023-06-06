@@ -6,6 +6,8 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const ws = require('ws');
+const path = require('path');
+const fs = require('fs');
 
 const User = require('./models/User');
 const Message = require('./models/Message');
@@ -19,6 +21,7 @@ const jwtSecret = process.env.JWT_SECRET;
 const clientUrl = process.env.CLIENT_URL;
 
 mongoose.connect(mongooseUrl);
+const dirname = path.resolve(__dirname).replace(/\\/g, '/');
 
 const app = express();
 app.use(express.json());
@@ -29,6 +32,7 @@ app.use(
     origin: clientUrl,
   })
 );
+app.use('/uploads', express.static(path.join(dirname, 'uploads')));
 
 function getUserDataFromRequest(req) {
   return new Promise((resolve, reject) => {
@@ -141,7 +145,10 @@ const server = app.listen(3000, () => {
   console.log('Listening on port 3000');
 });
 
+// Websocket
 const wss = new ws.WebSocketServer({ server });
+
+// view who are online
 wss.on('connection', (connection, req) => {
   function notifyAboutOnlinePeople() {
     [...wss.clients].forEach((client) => {
@@ -172,6 +179,7 @@ wss.on('connection', (connection, req) => {
   connection.on('pong', () => {
     clearTimeout(connection.deathTimer);
   });
+
   // read id and username from the cookie for this connection
   const cookies = req?.headers.cookie;
   if (cookies) {
@@ -192,15 +200,30 @@ wss.on('connection', (connection, req) => {
 
   // send message to user selected
   connection.on('message', async (message) => {
-    const { recipient, text } = JSON.parse(message);
+    const { recipient, text, file } = JSON.parse(message);
+
+    let fileName = null;
+
+    if (file) {
+      const parts = file.name.split('.');
+      const extension = parts[parts.length - 1];
+      fileName = `${Date.now()}.${extension}`;
+      const filePath = `${dirname}/uploads/${fileName}`;
+      const buffer = new Buffer.from(file.data.split(',')[1], 'base64');
+      fs.writeFile(filePath, buffer, (err) => {
+        if (err) throw err;
+        console.log('file saved', filePath);
+      });
+    }
 
     // send message to all users
-    if (recipient && text) {
+    if (recipient && (text || file)) {
       // create new message in database
       const messageData = await Message.create({
         sender: connection._id,
         recipient,
         text,
+        file: file ? fileName : null,
       });
 
       [...wss.clients]
@@ -212,6 +235,7 @@ wss.on('connection', (connection, req) => {
               sender: connection.userId,
               recipient,
               text,
+              file: file ? fileName : null,
             })
           );
         });
