@@ -58,7 +58,7 @@ app.post('/register', async (req, res) => {
       password: hashedPassword,
     });
     jwt.sign(
-      { userId: createdUser._id, username },
+      { _id: createdUser._id, username },
       jwtSecret,
       {},
       (err, token) => {
@@ -66,7 +66,7 @@ app.post('/register', async (req, res) => {
         res
           .cookie('token', token, { sameSite: 'none', secure: true })
           .status(201)
-          .json({ id: createdUser._id, username });
+          .json({ _id: createdUser._id, username });
       }
     );
   } catch (error) {
@@ -79,24 +79,20 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
+
     if (user) {
       const passOk = await bcrypt.compare(password, user.password);
       if (passOk) {
-        jwt.sign(
-          { userId: user._id, username },
-          jwtSecret,
-          {},
-          (err, token) => {
-            if (err) throw err;
-            res
-              .cookie('token', token, { sameSite: 'none', secure: true })
-              .status(200)
-              .json({
-                id: user._id,
-                username,
-              });
-          }
-        );
+        jwt.sign({ _id: user._id, username }, jwtSecret, {}, (err, token) => {
+          if (err) throw err;
+          res
+            .cookie('token', token, { sameSite: 'none', secure: true })
+            .status(200)
+            .json({
+              _id: user._id,
+              username,
+            });
+        });
       }
     } else {
       res.status(401).json('Wrong credentials');
@@ -125,7 +121,7 @@ app.get('/profile', (req, res) => {
 app.get('/messages/:userId', async (req, res) => {
   const userRecipientId = req.params.userId;
   const userData = await getUserDataFromRequest(req);
-  const userSenderId = userData.userId;
+  const userSenderId = userData._id;
 
   const messages = await Message.find({
     sender: { $in: [userSenderId, userRecipientId] },
@@ -136,7 +132,7 @@ app.get('/messages/:userId', async (req, res) => {
   res.json(messages);
 });
 
-app.get('/people', async (req, res) => {
+app.get('/people', async (_req, res) => {
   const users = await User.find({}, { _id: 1, username: 1 }).exec();
   res.json(users);
 });
@@ -151,9 +147,9 @@ wss.on('connection', (connection, req) => {
     [...wss.clients].forEach((client) => {
       client.send(
         JSON.stringify({
-          online: [...wss.clients].map((client) => ({
-            userId: client.userId,
-            username: client.username,
+          online: [...wss.clients].map((cliente) => ({
+            _id: cliente._id,
+            username: cliente.username,
           })),
         })
       );
@@ -165,8 +161,8 @@ wss.on('connection', (connection, req) => {
   connection.timer = setInterval(() => {
     connection.ping();
     connection.deathTimer = setTimeout(() => {
-      clearInterval(connection.timer);
       connection.isAlive = false;
+      clearInterval(connection.timer);
       connection.terminate();
       notifyAboutOnlinePeople();
       console.log('disconnected');
@@ -185,10 +181,10 @@ wss.on('connection', (connection, req) => {
     if (tokenString) {
       const token = tokenString.split('=')[1];
       if (token) {
-        jwt.verify(token, jwtSecret, {}, (err, decoded) => {
+        jwt.verify(token, jwtSecret, {}, (err, userData) => {
           if (err) throw err;
-          connection.userId = decoded.userId;
-          connection.username = decoded.username;
+          connection._id = userData._id;
+          connection.username = userData.username;
         });
       }
     }
@@ -198,17 +194,17 @@ wss.on('connection', (connection, req) => {
   connection.on('message', async (message) => {
     const { recipient, text } = JSON.parse(message);
 
-    // create new message in database
-    const messageData = await Message.create({
-      sender: connection.userId,
-      recipient,
-      text,
-    });
-
     // send message to all users
     if (recipient && text) {
+      // create new message in database
+      const messageData = await Message.create({
+        sender: connection._id,
+        recipient,
+        text,
+      });
+
       [...wss.clients]
-        .filter((client) => client.userId === recipient)
+        .filter((client) => client._id === recipient)
         .forEach((client) => {
           client.send(
             JSON.stringify({
