@@ -13,10 +13,10 @@ export const Messages = ({ sender, text }) => {
   }, [text]);
 
   return (
-    <div className={sender === user.userId ? 'text-right' : 'text-left'}>
+    <div className={sender === user._id ? 'text-right' : 'text-left'}>
       <div
         className={`text-white inline-block rounded-lg shadow-2xl ${
-          sender === user.userId ? 'bg-blue-600 p-2' : 'bg-gray-500 p-2'
+          sender === user._id ? 'bg-blue-600 p-2' : 'bg-gray-500 p-2'
         }`}>
         {text}
       </div>
