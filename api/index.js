@@ -8,11 +8,17 @@ const cookieParser = require('cookie-parser');
 const ws = require('ws');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 
 const User = require('./models/User');
 const Message = require('./models/Message');
 
 dotenv.config();
+cloudinary.config({
+  cloud_name: 'my-upload',
+  api_key: '764196872247924',
+  api_secret: '__6IVs10tV4dts9DMc4_3tEP-Jk',
+});
 
 const bcryptSalt = bcrypt.genSaltSync(10);
 
@@ -145,6 +151,11 @@ const server = app.listen(3000, () => {
   console.log('Listening on port 3000');
 });
 
+const uploadToCloudinary = async (file) => {
+  const { secure_url } = await cloudinary.uploader.upload(file);
+  return secure_url;
+};
+
 // Websocket
 const wss = new ws.WebSocketServer({ server });
 
@@ -203,27 +214,42 @@ wss.on('connection', (connection, req) => {
     const { recipient, text, file } = JSON.parse(message);
 
     let fileName = null;
+    let url = null;
 
     if (file) {
-      const parts = file.name.split('.');
-      const extension = parts[parts.length - 1];
-      fileName = `${Date.now()}.${extension}`;
-      const filePath = `${dirname}/uploads/${fileName}`;
-      const buffer = new Buffer.from(file.data.split(',')[1], 'base64');
-      fs.writeFile(filePath, buffer, (err) => {
-        if (err) throw err;
-        console.log('file saved', filePath);
-      });
+      try {
+        const parts = file.name.split('.');
+        const extension = parts[parts.length - 1];
+        fileName = `${Date.now()}.${extension}`;
+        const filePath = `${dirname}/uploads/${fileName}`;
+        const buffer = new Buffer.from(file.data.split(',')[1], 'base64');
+        fs.writeFile(filePath, buffer, (err) => {
+          if (err) throw err;
+          console.log('file saved', filePath);
+        });
+
+        url = await uploadToCloudinary(filePath);
+
+        if (url) {
+          setTimeout(() => {
+            fs.unlink(filePath, (err) => {
+              if (err) throw err;
+            });
+          }, 3000);
+        }
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     // send message to all users
-    if (recipient && (text || file)) {
+    if (recipient && (text || url)) {
       // create new message in database
       const messageData = await Message.create({
         sender: connection._id,
         recipient,
         text,
-        file: file ? fileName : null,
+        file: url,
       });
 
       [...wss.clients]
@@ -232,10 +258,10 @@ wss.on('connection', (connection, req) => {
           client.send(
             JSON.stringify({
               _id: messageData._id,
-              sender: connection.userId,
+              sender: connection._id,
               recipient,
               text,
-              file: file ? fileName : null,
+              file: url,
             })
           );
         });
