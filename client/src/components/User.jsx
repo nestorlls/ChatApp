@@ -4,7 +4,7 @@ import { colors } from '../constants/colors';
 export const User = () => {
   const { user } = useUser();
 
-  const userIdBase10 = parseInt(user?.userId, 16);
+  const userIdBase10 = parseInt(user?._id, 16);
   const color = colors.text[userIdBase10 % colors.text.length];
 
   return (
