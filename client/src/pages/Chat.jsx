@@ -19,6 +19,11 @@ const showOnlinePeople = (onlineUsersArr) => {
   return people;
 };
 
+const getMessagesFromDB = async (userSelected) => {
+  const messages = await axios.get(`/messages/${userSelected}`);
+  return messages;
+};
+
 export const Chat = () => {
   const { user } = useUser();
   const [wsConecction, setWsConecction] = useState(null);
@@ -28,27 +33,46 @@ export const Chat = () => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    connectionWebSocket();
+  }, [userSelected]);
+
+  const connectionWebSocket = () => {
     const ws = new WebSocket('ws://localhost:3000');
     setWsConecction(ws);
-    ws.addEventListener('message', (event) => {
-      const messageData = JSON.parse(event.data);
+    ws.addEventListener('message', handleMessage);
+    ws.addEventListener('close', () => {
+      console.log('Disconnected trying to reconnect...');
+      setTimeout(connectionWebSocket, 1000);
+    });
+  };
 
-      if ('online' in messageData) {
-        const onlinePeople = showOnlinePeople(messageData.online);
+  const handleMessage = (e) => {
+    const messageData = JSON.parse(e.data);
 
-        setOnliPeople(onlinePeople);
-      } else if ('text' in messageData) {
+    console.log(messageData);
+
+    if ('online' in messageData) {
+      const onlinePeople = showOnlinePeople(messageData.online);
+
+      setOnliPeople(onlinePeople);
+    } else if ('text' in messageData) {
+      if (userSelected === messageData.sender) {
         setMessages((prev) => [...prev, { ...messageData }]);
       }
-    });
-  }, []);
+    }
+  };
 
   useEffect(() => {
     if (userSelected) {
-      axios.get(`/messages/${userSelected}`).then((res) => {
-        setMessages(res.data);
-      });
+      getMessagesFromDB(userSelected)
+        .then((res) => {
+          setMessages(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
+    console.log('console log here');
   }, [userSelected]);
 
   useEffect(() => {
