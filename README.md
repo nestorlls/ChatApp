@@ -77,7 +77,7 @@ Listening on http://localhost:3000
 ```
 $ yarn dev
 ```
-Aparecerá como sique abajo. Dirijase a su navegador gidite el http://localhost:5173/ y tendrá la pagina de login y/o registro: 
+Aparecerá como sique abajo. Dirijase a su navegador y digite la url http://localhost:5173/ y tendrá la pagina de login y/o registro: 
 ```
 ➜ yarn dev    
 yarn run v1.22.19
@@ -89,3 +89,7 @@ $ vite
   ➜  Network: use --host to expose
   ➜  press h to show help
   ```
+  
+  para experimentar el chat real registrese con su Username y password y cree otro adicial y este último abralo en un navegador diferente e inicie sesión. 
+  Que disfrute de la experiencia 😉
+  
