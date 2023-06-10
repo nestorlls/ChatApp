@@ -21,14 +21,14 @@ https://github.com/nestorlls/ChatApp.git
 $ cd ChatApp
 ```
 
-dentro de la carpeta ChatApp econtrarás dos carpetas api y client.
+dentro de la carpeta ChatApp encontrarás dos carpetas api y client.
 -  **Carpeta api**
 
 ```
 $ cd api
 ```
 
-dentro de la carpeta ejecute el siguiente comando para installar las dependencias.
+dentro de la carpeta ejecute el siguiente comando para instalar las dependencias.
 ```
 $ yarn install
 ```
@@ -45,6 +45,13 @@ MONGO_URI = mongodb+srv://your_project_name:<"your_proyect_password ">@cluster0.
 JWT_SECRETE: puede tipear letras en forma aleatorio que servirá como token
 CLIENT_URL: es la dominio de lado de Frontend, ejemplo: http://localhost:5173
 
+Cree un archivo .env
+```
+// .env
+MONGO_URI= colocar tu url de mondodb
+JWT_SECRETE= colocar tu token generado randomicamente
+CLIENT_URL='http://localhost:5173'
+```
 teniendo las variables e instaladas las dependencias, ya esta lista en lado del servidor.
 
 - **Carpeta client** 
@@ -77,7 +84,7 @@ Listening on http://localhost:3000
 ```
 $ yarn dev
 ```
-Aparecerá como sique abajo. Dirijase a su navegador y digite la url http://localhost:5173/ y tendrá la pagina de login y/o registro: 
+Aparecerá como sique abajo. Dirijase a su navegador y digite la url http://localhost:5173/ y tendrá la página de login y/o registro: 
 ```
 ➜ yarn dev    
 yarn run v1.22.19
